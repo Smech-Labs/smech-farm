@@ -1,0 +1,14 @@
+/home/smech/smechos/SmechFarm/smech-farm/target/x86_64-unknown-linux-gnu/release/deps/serde-e893758bb2b97621.d: /home/smech/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/lib.rs /home/smech/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/integer128.rs /home/smech/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/mod.rs /home/smech/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/de.rs /home/smech/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/ser.rs /home/smech/smechos/SmechFarm/smech-farm/target/x86_64-unknown-linux-gnu/release/build/serde-388eef4f28b33936/out/private.rs
+
+/home/smech/smechos/SmechFarm/smech-farm/target/x86_64-unknown-linux-gnu/release/deps/libserde-e893758bb2b97621.rlib: /home/smech/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/lib.rs /home/smech/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/integer128.rs /home/smech/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/mod.rs /home/smech/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/de.rs /home/smech/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/ser.rs /home/smech/smechos/SmechFarm/smech-farm/target/x86_64-unknown-linux-gnu/release/build/serde-388eef4f28b33936/out/private.rs
+
+/home/smech/smechos/SmechFarm/smech-farm/target/x86_64-unknown-linux-gnu/release/deps/libserde-e893758bb2b97621.rmeta: /home/smech/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/lib.rs /home/smech/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/integer128.rs /home/smech/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/mod.rs /home/smech/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/de.rs /home/smech/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/ser.rs /home/smech/smechos/SmechFarm/smech-farm/target/x86_64-unknown-linux-gnu/release/build/serde-388eef4f28b33936/out/private.rs
+
+/home/smech/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/lib.rs:
+/home/smech/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/integer128.rs:
+/home/smech/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/mod.rs:
+/home/smech/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/de.rs:
+/home/smech/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/ser.rs:
+/home/smech/smechos/SmechFarm/smech-farm/target/x86_64-unknown-linux-gnu/release/build/serde-388eef4f28b33936/out/private.rs:
+
+# env-dep:OUT_DIR=/home/smech/smechos/SmechFarm/smech-farm/target/x86_64-unknown-linux-gnu/release/build/serde-388eef4f28b33936/out

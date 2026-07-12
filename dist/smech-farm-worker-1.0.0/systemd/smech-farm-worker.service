@@ -1,0 +1,12 @@
+[Unit]
+Description=SmechFarm Worker Agent
+After=network.target
+
+[Service]
+Environment=SMECH_ORCHESTRATOR=orchestrator:7734
+ExecStart=/usr/local/bin/smech-farm-worker daemon
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

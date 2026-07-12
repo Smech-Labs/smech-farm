@@ -1,0 +1,55 @@
+FROM alpine:3.20
+
+# Minimal SSH shell container — no apk, no package manager at runtime.
+# Only openssh (for the entry point) and the smech-farm-orchestrator binary.
+RUN apk add --no-cache openssh \
+    && rm -rf /var/cache/apk/* /usr/bin/apk /sbin/apk /etc/apk \
+    && mkdir -p /var/run/sshd /etc/smech-farm
+
+# Pre-generate host keys
+RUN ssh-keygen -A
+
+# Create smech-farm user — locked password, shell is the orchestrator binary
+RUN adduser -D -s /usr/local/bin/smech-farm-shell smech-farm
+
+# Minimal sshd config: only key auth, force into smech-farm shell
+RUN echo "PermitRootLogin no"          > /etc/ssh/sshd_config && \
+    echo "PasswordAuthentication no"  >> /etc/ssh/sshd_config && \
+    echo "PubkeyAuthentication yes"   >> /etc/ssh/sshd_config && \
+    echo "AllowUsers smech-farm"      >> /etc/ssh/sshd_config && \
+    echo "ForceCommand /usr/local/bin/smech-farm-shell" >> /etc/ssh/sshd_config && \
+    echo "X11Forwarding no"           >> /etc/ssh/sshd_config && \
+    echo "AllowTcpForwarding no"      >> /etc/ssh/sshd_config && \
+    echo "PrintMotd no"               >> /etc/ssh/sshd_config && \
+    echo "LogLevel VERBOSE"           >> /etc/ssh/sshd_config
+
+# smech-farm-shell: SSH ForceCommand — only the interactive shell mode.
+# The daemon and API are started by the entrypoint, not per-SSH-session.
+RUN printf '#!/bin/sh\nexec /usr/local/bin/smech-farm-orchestrator shell\n' \
+    > /usr/local/bin/smech-farm-shell && \
+    chmod +x /usr/local/bin/smech-farm-shell
+
+# entrypoint: start daemon + API as background services, then sshd in foreground
+RUN printf '#!/bin/sh\n\
+smech-farm-orchestrator daemon &\n\
+smech-farm-orchestrator serve &\n\
+exec /usr/sbin/sshd -D -e\n' \
+    > /usr/local/bin/smech-farm-entrypoint && \
+    chmod +x /usr/local/bin/smech-farm-entrypoint
+
+# Binary is baked in at image build time by build.sh
+COPY smech-farm-orchestrator /usr/local/bin/smech-farm-orchestrator
+RUN chmod +x /usr/local/bin/smech-farm-orchestrator
+
+# Authorized keys go here (mount or build-time COPY)
+RUN mkdir -p /home/smech-farm/.ssh && \
+    chmod 700 /home/smech-farm/.ssh && \
+    chown smech-farm:smech-farm /home/smech-farm/.ssh
+
+# Host OS shell escape: nsenter needs access to host PID 1
+# Requires --pid=host when running the container
+ENV HOST_SHELL=/bin/bash
+
+EXPOSE 22
+
+CMD ["/usr/local/bin/smech-farm-entrypoint"]

@@ -1,0 +1,3 @@
+[workspace]
+members = ["orchestrator", "worker", "client"]
+resolver = "2"

@@ -1,0 +1,11 @@
+[Unit]
+Description=SmechFarm API and Web UI
+After=network.target
+
+[Service]
+ExecStart=/usr/local/bin/smech-farm-orchestrator serve
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

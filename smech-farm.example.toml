@@ -1,0 +1,36 @@
+# smech-farm.toml — SmechFarm configuration
+# Place at ./smech-farm.toml or /etc/smech-farm/smech-farm.toml
+
+[farm]
+# Dashboard branding
+name         = "SmechFarm"
+tagline      = "Distributed Build Farm"
+accent_color = "#58a6ff"
+logo_url     = ""          # URL or base64 data URI — leave empty for default icon
+
+# ── WireGuard (optional) ──────────────────────────────────────────────────────
+# Enable this section to allow cloud/VPS workers to join via WireGuard tunnel.
+# Workers on the same LAN do not need WireGuard — this is purely opt-in.
+
+[wireguard]
+enabled          = false
+
+# WireGuard interface name on the orchestrator host
+interface        = "wg0"
+
+# Public IP:port of the orchestrator, reachable from the internet
+# Workers use this to establish the tunnel
+# Example: "203.0.113.10:51820"
+server_endpoint  = ""
+
+# WireGuard listen port on the orchestrator
+listen_port      = 51820
+
+# IP assigned to the orchestrator's WireGuard interface
+server_wg_ip     = "10.99.0.1/24"
+
+# Pool from which worker IPs are assigned (.2 through .254)
+worker_ip_pool   = "10.99.0.0/24"
+
+# The server private key is auto-generated at /etc/smech-farm/wg0.key on first start.
+# You do not need to set it here.
