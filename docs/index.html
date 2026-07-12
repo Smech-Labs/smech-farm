@@ -3,410 +3,537 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>smech-farm — Distributed Build Farm</title>
+<title>SmechFarm — Distributed Build Farm</title>
 <meta name="description" content="Self-hosted distributed build farm with WireGuard cloud support, web dashboard, REST API, and SSH shell. Works on bare metal or any cloud VPS.">
+<link rel="icon" href="logo.svg" type="image/svg+xml">
 <style>
 :root {
-  --bg:      #08090d;
-  --surf:    #0f1520;
-  --surf2:   #151e30;
-  --border:  #1a2740;
-  --text:    #d0e0f8;
-  --muted:   #5a7090;
-  --dim:     #3a5070;
-  --accent:  #3d9bff;
-  --green:   #29d97a;
-  --warm:    #f0a840;
-  --red:     #f05060;
-  --mono:    'JetBrains Mono','Fira Code','SF Mono',ui-monospace,monospace;
-  --sans:    system-ui,-apple-system,'Segoe UI',sans-serif;
+  --bg:         #0a0a0a;
+  --bg-raised:  #141414;
+  --text:       #f5f5f5;
+  --text-dim:   #b3b3b3;
+  --accent:     #ff5a4e;
+  --accent-blue:#3b82f6;
+  --border:     #262626;
+  --max-width:  1100px;
+  --mono: 'JetBrains Mono','Fira Code','SF Mono',ui-monospace,monospace;
 }
-@media (prefers-color-scheme: light) {
-  :root {
-    --bg:    #f0f4fa;
-    --surf:  #ffffff;
-    --surf2: #e8eef8;
-    --border:#c8d8f0;
-    --text:  #0a1525;
-    --muted: #5070a0;
-    --dim:   #8090b0;
-  }
-}
-:root[data-theme="dark"]  { --bg:#08090d; --surf:#0f1520; --surf2:#151e30; --border:#1a2740; --text:#d0e0f8; --muted:#5a7090; --dim:#3a5070; }
-:root[data-theme="light"] { --bg:#f0f4fa; --surf:#ffffff; --surf2:#e8eef8; --border:#c8d8f0; --text:#0a1525; --muted:#5070a0; --dim:#8090b0; }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { scroll-behavior: smooth; }
 body {
   background: var(--bg);
   color: var(--text);
-  font-family: var(--sans);
+  font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   font-size: 15px;
   line-height: 1.6;
   overflow-x: hidden;
 }
 
-body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  background-image:
-    linear-gradient(var(--border) 1px, transparent 1px),
-    linear-gradient(90deg, var(--border) 1px, transparent 1px);
-  background-size: 40px 40px;
-  opacity: 0.18;
-  pointer-events: none;
-  z-index: 0;
-}
-
-nav {
-  position: sticky; top: 0; z-index: 100;
-  background: color-mix(in srgb, var(--bg) 85%, transparent);
-  backdrop-filter: blur(12px);
+/* ── header ── */
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: rgba(10,10,10,0.92);
+  backdrop-filter: blur(6px);
   border-bottom: 1px solid var(--border);
-  padding: 0 max(24px, calc(50vw - 580px));
-  display: flex; align-items: center; gap: 32px; height: 54px;
 }
-.nav-logo {
-  font-family: var(--mono);
-  font-size: 15px; font-weight: 600;
-  color: var(--accent);
+.header-inner {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 1rem 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-right: auto;
   text-decoration: none;
-  display: flex; align-items: center; gap: 8px;
 }
-.nav-logo .bracket { color: var(--muted); }
-nav a { color: var(--muted); text-decoration: none; font-size: 13px; }
-nav a:hover { color: var(--text); }
-.nav-right { margin-left: auto; display: flex; gap: 16px; align-items: center; }
-.nav-gh {
-  background: var(--surf2); border: 1px solid var(--border);
-  color: var(--text) !important; padding: 5px 14px; border-radius: 4px;
-  font-size: 12px; font-family: var(--mono);
+.brand-logo { height: 32px; width: auto; }
+.brand-name { font-weight: 700; font-size: 1.05rem; color: var(--text); }
+.nav { display: flex; gap: 1.5rem; }
+.nav a {
+  color: var(--text-dim);
+  font-size: 0.95rem;
+  text-decoration: none;
+  transition: color 0.15s;
 }
-.nav-gh:hover { border-color: var(--accent); }
+.nav a:hover { color: var(--accent); }
+.nav-toggle {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  width: 32px; height: 32px;
+  background: none; border: none; cursor: pointer; padding: 0;
+}
+.nav-toggle span { display: block; height: 2px; background: var(--text); }
 
-section, .hero { position: relative; z-index: 1; }
+/* ── buttons ── */
+.btn {
+  display: inline-block;
+  padding: 0.65rem 1.35rem;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid transparent;
+  text-decoration: none;
+  transition: transform 0.15s, background 0.15s, color 0.15s;
+}
+.btn:hover { transform: translateY(-1px); }
+.btn-primary { background: var(--accent); color: #0a0a0a; }
+.btn-primary:hover { background: #ff7167; }
+.btn-outline { background: transparent; color: var(--text); border-color: var(--border); }
+.btn-outline:hover { border-color: var(--accent); color: var(--accent); }
 
+/* ── hero ── */
 .hero {
-  padding: 72px max(24px, calc(50vw - 580px)) 64px;
+  position: relative;
+  overflow: hidden;
+  padding: 5rem 1.5rem 4rem;
+}
+.hero-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background:
+    radial-gradient(circle at 20% 60%, rgba(59,130,246,0.18), transparent 45%),
+    radial-gradient(circle at 75% 30%, rgba(255,90,78,0.13), transparent 50%);
+  animation: drift 20s ease-in-out infinite alternate;
+}
+@keyframes drift {
+  from { transform: scale(1) translate(0,0); }
+  to   { transform: scale(1.1) translate(-2%,2%); }
+}
+.hero-inner {
+  position: relative;
+  z-index: 1;
+  max-width: var(--max-width);
+  margin: 0 auto;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 56px;
+  gap: 3.5rem;
   align-items: start;
 }
 @media (max-width: 820px) {
-  .hero { grid-template-columns: 1fr; gap: 40px; }
+  .hero-inner { grid-template-columns: 1fr; gap: 2.5rem; }
 }
 .hero-eyebrow {
-  font-family: var(--mono); font-size: 11px;
-  color: var(--accent); letter-spacing: .12em; text-transform: uppercase;
-  margin-bottom: 16px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 1rem;
 }
 .hero h1 {
-  font-size: clamp(28px, 4vw, 44px);
-  font-weight: 700; line-height: 1.15;
+  font-size: clamp(1.9rem, 4vw, 2.8rem);
+  font-weight: 700;
+  line-height: 1.15;
   text-wrap: balance;
-  margin-bottom: 20px;
+  margin-bottom: 1.2rem;
 }
 .hero h1 em { font-style: normal; color: var(--accent); }
-.hero-desc { color: var(--muted); font-size: 16px; line-height: 1.7; margin-bottom: 32px; }
-.hero-actions { display: flex; gap: 12px; flex-wrap: wrap; }
-.btn {
-  display: inline-flex; align-items: center; gap: 8px;
-  padding: 10px 20px; border-radius: 4px;
-  font-family: var(--mono); font-size: 13px; font-weight: 500;
-  text-decoration: none; cursor: pointer; border: none;
-  transition: opacity .15s;
+.hero-desc {
+  color: var(--text-dim);
+  font-size: 1.05rem;
+  line-height: 1.75;
+  margin-bottom: 1.75rem;
 }
-.btn:hover { opacity: .85; }
-.btn-primary { background: var(--accent); color: #fff; }
-.btn-ghost   { background: transparent; border: 1px solid var(--border); color: var(--text); }
-
-.terminal {
-  background: #020508;
+.badge-row { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
+.badge {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.25rem 0.65rem;
+  border-radius: 4px;
   border: 1px solid var(--border);
-  border-radius: 6px;
+  color: var(--text-dim);
+}
+.badge.green { border-color: #4ade80; color: #4ade80; background: rgba(74,222,128,0.08); }
+.badge.blue  { border-color: var(--accent-blue); color: var(--accent-blue); background: rgba(59,130,246,0.08); }
+.hero-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+
+/* ── terminal ── */
+.terminal {
+  background: #070a0e;
+  border: 1px solid var(--border);
+  border-radius: 10px;
   overflow: hidden;
   font-family: var(--mono);
   font-size: 12.5px;
-  line-height: 1.7;
-  box-shadow: 0 24px 64px rgba(0,0,0,.5);
+  line-height: 1.75;
+  box-shadow: 0 24px 56px rgba(0,0,0,0.55);
 }
 .terminal-bar {
-  background: #0d1520;
+  background: #0d1117;
   border-bottom: 1px solid var(--border);
-  padding: 9px 14px;
-  display: flex; align-items: center; gap: 7px;
+  padding: 0.6rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 .dot { width: 10px; height: 10px; border-radius: 50%; }
 .dot-r { background: #ff5f57; }
 .dot-y { background: #ffbd2e; }
 .dot-g { background: #28ca41; }
-.terminal-title { color: var(--dim); font-size: 11px; margin-left: 8px; }
-.terminal-body { padding: 18px 20px; min-height: 260px; }
-.t-prompt { color: var(--green); }
-.t-cmd    { color: var(--text); }
-.t-arg    { color: var(--warm); }
-.t-flag   { color: #9de0ff; }
-.t-ok     { color: var(--green); }
-.t-info   { color: var(--muted); }
-.t-sep    { color: var(--dim); }
-.t-ip     { color: #c9b8ff; }
-.cursor { display: inline-block; width: 7px; height: 13px; background: var(--accent); animation: blink .9s step-end infinite; vertical-align: text-bottom; margin-left: 1px; }
-@keyframes blink { 50% { opacity: 0; } }
+.terminal-title { color: #555; font-size: 11px; margin-left: 8px; }
+.terminal-body { padding: 1.2rem 1.4rem; min-height: 250px; }
 .t-line { display: block; }
 .t-line.hidden { display: none; }
+.t-prompt { color: var(--accent); }
+.t-cmd    { color: var(--text); }
+.t-arg    { color: #fbbf24; }
+.t-flag   { color: #93c5fd; }
+.t-ok     { color: #4ade80; }
+.t-info   { color: #555; }
+.t-sep    { color: #333; }
+.t-ip     { color: #a78bfa; }
+.cursor   { display: inline-block; width: 7px; height: 13px; background: var(--accent); animation: blink 0.9s step-end infinite; vertical-align: text-bottom; margin-left: 1px; }
+@keyframes blink { 50% { opacity: 0; } }
 
-.badge-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
-.badge {
-  font-family: var(--mono); font-size: 11px;
-  padding: 3px 9px; border-radius: 3px;
-  border: 1px solid var(--border);
-  color: var(--muted);
+/* ── feature grid ── */
+.features-section {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 4.5rem 1.5rem;
 }
-.badge.green { border-color: var(--green); color: var(--green); background: color-mix(in srgb, var(--green) 10%, transparent); }
-.badge.blue  { border-color: var(--accent); color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, transparent); }
-
-.features {
-  padding: 72px max(24px, calc(50vw - 580px));
+.section-header { text-align: center; margin-bottom: 2.5rem; }
+.section-header h2 { font-size: clamp(1.4rem, 3vw, 1.9rem); font-weight: 700; margin-bottom: 0.5rem; }
+.section-header p { color: var(--text-dim); max-width: 520px; margin: 0 auto; }
+.feature-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 1px;
-  background: var(--border);
-  border-top: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
 }
-.feature {
-  background: var(--bg);
-  padding: 36px 32px;
+.feature-card {
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1.75rem;
+  transition: border-color 0.15s;
 }
+.feature-card:hover { border-color: var(--accent); }
 .feature-icon {
-  font-size: 22px; margin-bottom: 14px;
   width: 44px; height: 44px;
+  border-radius: 8px;
+  background: var(--accent);
+  margin-bottom: 1.1rem;
   display: flex; align-items: center; justify-content: center;
-  background: var(--surf); border: 1px solid var(--border);
-  border-radius: 4px;
 }
-.feature h3 { font-size: 15px; font-weight: 600; margin-bottom: 8px; }
-.feature p  { color: var(--muted); font-size: 13.5px; line-height: 1.65; }
+.feature-card h3 { font-size: 1rem; font-weight: 700; margin-bottom: 0.5rem; }
+.feature-card p  { color: var(--text-dim); font-size: 0.875rem; line-height: 1.7; }
 
+/* ── config ── */
 .config-section {
-  padding: 80px max(24px, calc(50vw - 580px));
+  border-top: 1px solid var(--border);
+  padding: 4.5rem 1.5rem;
+}
+.config-inner {
+  max-width: var(--max-width);
+  margin: 0 auto;
   display: grid;
   grid-template-columns: 1fr 1.1fr;
-  gap: 64px;
+  gap: 4rem;
   align-items: start;
 }
-@media (max-width: 820px) { .config-section { grid-template-columns: 1fr; } }
+@media (max-width: 820px) { .config-inner { grid-template-columns: 1fr; } }
 .section-label {
-  font-family: var(--mono); font-size: 11px;
-  color: var(--accent); letter-spacing: .12em; text-transform: uppercase;
-  margin-bottom: 12px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 0.75rem;
 }
-.config-section h2 { font-size: 28px; font-weight: 700; margin-bottom: 14px; text-wrap: balance; }
-.config-section p  { color: var(--muted); font-size: 14px; line-height: 1.75; margin-bottom: 16px; }
+.config-inner h2 { font-size: 1.7rem; font-weight: 700; margin-bottom: 1rem; text-wrap: balance; }
+.config-inner p  { color: var(--text-dim); font-size: 0.9rem; line-height: 1.75; margin-bottom: 1rem; }
 .config-note {
-  border-left: 2px solid var(--green);
-  padding: 10px 16px;
-  background: color-mix(in srgb, var(--green) 6%, transparent);
-  font-size: 13px; color: var(--text); border-radius: 0 4px 4px 0;
+  border-left: 2px solid #4ade80;
+  padding: 0.65rem 1rem;
+  background: rgba(74,222,128,0.06);
+  font-size: 0.85rem;
+  color: var(--text);
+  border-radius: 0 6px 6px 0;
 }
-.config-note strong { color: var(--green); }
-
+.config-note strong { color: #4ade80; }
 pre.code-block {
-  background: #020508;
+  background: #070a0e;
   border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 22px 24px;
+  border-radius: 10px;
+  padding: 1.4rem 1.5rem;
   font-family: var(--mono);
   font-size: 12.5px;
   line-height: 1.8;
   overflow-x: auto;
   color: var(--text);
 }
-.c-comment { color: var(--dim); }
-.c-key     { color: #9de0ff; }
-.c-eq      { color: var(--muted); }
-.c-val     { color: var(--warm); }
+.c-comment { color: #444; }
+.c-key     { color: #93c5fd; }
+.c-eq      { color: #555; }
+.c-val     { color: #fbbf24; }
 .c-bool    { color: var(--accent); }
-.c-section { color: var(--green); font-weight: 600; }
+.c-section { color: #4ade80; font-weight: 600; }
 
+/* ── cloud ── */
 .cloud-section {
-  padding: 72px max(24px, calc(50vw - 580px));
   border-top: 1px solid var(--border);
+  padding: 4.5rem 1.5rem;
 }
-.cloud-section h2 { font-size: 24px; font-weight: 700; margin-bottom: 8px; }
-.cloud-section .sub { color: var(--muted); font-size: 14px; margin-bottom: 36px; }
+.cloud-inner { max-width: var(--max-width); margin: 0 auto; }
+.cloud-inner h2 { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.4rem; }
+.cloud-inner .sub { color: var(--text-dim); font-size: 0.9rem; margin-bottom: 2rem; }
 .cloud-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: 12px;
+  gap: 0.75rem;
 }
 .cloud-card {
-  background: var(--surf);
+  background: var(--bg-raised);
   border: 1px solid var(--border);
-  border-radius: 4px;
-  padding: 18px 20px;
-  display: flex; align-items: center; gap: 12px;
+  border-radius: 8px;
+  padding: 1.1rem 1.25rem;
+  display: flex; align-items: center; gap: 0.75rem;
+  transition: border-color 0.15s;
 }
 .cloud-card:hover { border-color: var(--accent); }
-.cloud-card .cc-icon { font-size: 20px; }
-.cloud-card .cc-name { font-size: 13px; font-weight: 500; }
-.cloud-card .cc-note { font-size: 11px; color: var(--muted); font-family: var(--mono); }
+.cc-icon { font-size: 1.25rem; }
+.cc-name { font-size: 0.875rem; font-weight: 600; }
+.cc-note { font-size: 0.72rem; color: var(--text-dim); font-family: var(--mono); }
 
+/* ── install ── */
 .install-section {
-  padding: 72px max(24px, calc(50vw - 580px));
   border-top: 1px solid var(--border);
+  padding: 4.5rem 1.5rem;
 }
-.install-section h2 { font-size: 24px; font-weight: 700; margin-bottom: 8px; }
-.install-section .sub { color: var(--muted); font-size: 14px; margin-bottom: 32px; }
-.install-steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+.install-inner { max-width: var(--max-width); margin: 0 auto; }
+.install-inner h2 { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.4rem; }
+.install-inner .sub { color: var(--text-dim); font-size: 0.9rem; margin-bottom: 2rem; }
+.install-steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; }
 .install-step {
-  background: var(--surf);
+  background: var(--bg-raised);
   border: 1px solid var(--border);
-  border-radius: 4px;
+  border-radius: 10px;
   overflow: hidden;
 }
 .step-header {
-  background: var(--surf2);
+  background: #1a1a1a;
   border-bottom: 1px solid var(--border);
-  padding: 10px 16px;
-  display: flex; align-items: center; gap: 10px;
-  font-size: 12px; color: var(--muted);
+  padding: 0.65rem 1rem;
+  display: flex; align-items: center; gap: 0.65rem;
+  font-size: 0.8rem; color: var(--text-dim);
+  font-weight: 600;
 }
 .step-num {
-  background: var(--accent); color: #fff;
-  width: 20px; height: 20px; border-radius: 50%;
+  background: var(--accent);
+  color: #0a0a0a;
+  width: 20px; height: 20px;
+  border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
-  font-family: var(--mono); font-size: 11px; font-weight: 700;
+  font-size: 0.7rem; font-weight: 800;
   flex-shrink: 0;
+  font-family: var(--mono);
 }
-.step-body { padding: 16px; }
+.step-body { padding: 1rem 1.1rem; }
 pre.step-code {
-  font-family: var(--mono); font-size: 12px;
-  color: var(--text); line-height: 1.7;
-  white-space: pre-wrap; word-break: break-all;
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  color: var(--text);
+  line-height: 1.7;
+  white-space: pre-wrap;
+  word-break: break-all;
 }
-.step-code .sc-comment { color: var(--dim); }
-.step-code .sc-cmd     { color: var(--green); }
+.sc-comment { color: #444; }
+.sc-cmd     { color: #4ade80; }
 
-footer {
+/* ── footer ── */
+.site-footer {
+  text-align: center;
+  padding: 3rem 1.5rem;
   border-top: 1px solid var(--border);
-  padding: 28px max(24px, calc(50vw - 580px));
-  display: flex; gap: 24px; align-items: center; flex-wrap: wrap;
 }
-footer .f-logo { font-family: var(--mono); font-size: 13px; color: var(--accent); font-weight: 600; }
-footer .f-copy { color: var(--dim); font-size: 12px; }
-footer a { color: var(--muted); font-size: 12px; text-decoration: none; }
-footer a:hover { color: var(--text); }
-footer .f-right { margin-left: auto; display: flex; gap: 20px; }
+.footer-logo { height: 48px; width: auto; margin-bottom: 0.75rem; }
+.footer-brand { font-weight: 700; font-size: 1rem; margin-bottom: 0.75rem; }
+.site-footer p { color: var(--text-dim); font-size: 0.85rem; margin-bottom: 1rem; }
+.footer-links { display: flex; gap: 1.5rem; justify-content: center; flex-wrap: wrap; }
+.footer-links a { color: var(--accent-blue); font-size: 0.875rem; text-decoration: none; }
+.footer-links a:hover { text-decoration: underline; }
+
+/* ── responsive nav ── */
+@media (max-width: 720px) {
+  .nav {
+    position: absolute;
+    top: 100%; left: 0; right: 0;
+    background: var(--bg-raised);
+    border-bottom: 1px solid var(--border);
+    flex-direction: column;
+    padding: 1rem 1.5rem;
+    gap: 1rem;
+    display: none;
+  }
+  .nav.open { display: flex; }
+  .header-cta { display: none; }
+  .nav-toggle { display: flex; }
+}
 
 @media (prefers-reduced-motion: reduce) {
-  .cursor { animation: none; opacity: 1; }
+  .hero-bg { animation: none; }
+  .cursor  { animation: none; opacity: 1; }
 }
 </style>
 </head>
 <body>
 
-<nav>
-  <a href="#" class="nav-logo">
-    <span class="bracket">[</span>smech-farm<span class="bracket">]</span>
-  </a>
-  <a href="#features">Features</a>
-  <a href="#config">Config</a>
-  <a href="#install">Install</a>
-  <div class="nav-right">
-    <a href="https://github.com/Smech-Labs/smech-farm" class="btn nav-gh">GitHub &rarr;</a>
+<header class="site-header">
+  <div class="header-inner">
+    <a href="#" class="brand">
+      <img src="logo.svg" alt="SmechFarm logo" class="brand-logo">
+    </a>
+    <nav class="nav" id="main-nav">
+      <a href="#features">Features</a>
+      <a href="#config">Config</a>
+      <a href="#install">Install</a>
+    </nav>
+    <div class="header-cta">
+      <a href="https://github.com/Smech-Labs/smech-farm" class="btn btn-outline">GitHub &rarr;</a>
+    </div>
+    <button class="nav-toggle" id="nav-toggle" aria-label="Toggle menu">
+      <span></span><span></span><span></span>
+    </button>
   </div>
-</nav>
+</header>
 
-<div class="hero">
-  <div>
-    <div class="hero-eyebrow">Open Source &middot; MIT License &middot; v2.0.0</div>
-    <h1>Distributed build farm that <em>goes anywhere</em></h1>
-    <p class="hero-desc">
-      Self-hosted compile cluster with a web dashboard, REST API, and SSH shell.
-      Workers run on bare metal, LAN, or any cloud &mdash; connected via optional WireGuard tunnels.
-    </p>
-    <div class="badge-row">
-      <span class="badge green">&#9679; WireGuard ready</span>
-      <span class="badge blue">Cloud compatible</span>
-      <span class="badge">Zero external deps</span>
-      <span class="badge">Rust</span>
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-inner">
+    <div>
+      <div class="hero-eyebrow">Open Source &middot; MIT License &middot; v2.0.0</div>
+      <h1>Distributed build farm that <em>goes anywhere</em></h1>
+      <p class="hero-desc">
+        Self-hosted compile cluster with a web dashboard, REST API, and SSH shell.
+        Workers run on bare metal, LAN, or any cloud &mdash; joined via optional WireGuard tunnels.
+      </p>
+      <div class="badge-row">
+        <span class="badge green">&#9679; WireGuard ready</span>
+        <span class="badge blue">Cloud compatible</span>
+        <span class="badge">Zero external deps</span>
+        <span class="badge">Rust</span>
+      </div>
+      <div class="hero-actions">
+        <a href="#install" class="btn btn-primary">Get started</a>
+        <a href="https://github.com/Smech-Labs/smech-farm" class="btn btn-outline">View source</a>
+      </div>
     </div>
-    <div class="hero-actions">
-      <a href="#install" class="btn btn-primary">Get started</a>
-      <a href="https://github.com/Smech-Labs/smech-farm" class="btn btn-ghost">View source</a>
-    </div>
-  </div>
 
-  <div class="terminal">
-    <div class="terminal-bar">
-      <span class="dot dot-r"></span>
-      <span class="dot dot-y"></span>
-      <span class="dot dot-g"></span>
-      <span class="terminal-title">smech-farm-worker &mdash; cloud setup</span>
-    </div>
-    <div class="terminal-body">
-      <span class="t-line" id="tl0"><span class="t-prompt">root@gcp-vm</span><span class="t-cmd"> $ smech-farm-worker </span><span class="t-arg">wg-setup </span><span class="t-flag">--orchestrator </span><span class="t-arg">203.0.113.10:7734 </span><span class="t-flag">--name </span><span class="t-arg">worker-gcp-1</span></span>
-      <span class="t-line hidden" id="tl1"><br><span class="t-ok">[*]</span> <span class="t-cmd">SmechFarm WireGuard setup</span></span>
-      <span class="t-line hidden" id="tl2"><span class="t-ok">[*]</span> <span class="t-cmd">Orchestrator: 203.0.113.10:7734</span></span>
-      <span class="t-line hidden" id="tl3"><span class="t-ok">[+]</span> <span class="t-cmd">Generated WireGuard key pair</span></span>
-      <span class="t-line hidden" id="tl4"><span class="t-ok">[*]</span> <span class="t-cmd">Registering as <span class="t-arg">'worker-gcp-1'</span>...</span></span>
-      <span class="t-line hidden" id="tl5"><span class="t-ok">[+]</span> <span class="t-cmd">Assigned WireGuard IP: <span class="t-ip">10.99.0.2</span></span></span>
-      <span class="t-line hidden" id="tl6"><span class="t-ok">[+]</span> <span class="t-cmd">WireGuard interface smech-farm is up</span></span>
-      <span class="t-line hidden" id="tl7"><br><span class="t-sep">&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;</span></span>
-      <span class="t-line hidden" id="tl8"><span class="t-ok">[+]</span> <span class="t-cmd">WireGuard setup complete!</span></span>
-      <span class="t-line hidden" id="tl9">    <span class="t-info">Start daemon: </span><span class="t-cmd">smech-farm-worker daemon </span><span class="t-flag">--orchestrator </span><span class="t-ip">10.99.0.1</span><span class="t-cmd">:7734</span></span>
-      <span class="t-line hidden" id="tl10"><br><span class="t-prompt">root@gcp-vm</span><span class="t-cmd"> $ </span><span class="cursor"></span></span>
-    </div>
-  </div>
-</div>
-
-<section id="features">
-  <div class="features">
-    <div class="feature">
-      <div class="feature-icon">&#9881;</div>
-      <h3>Distributed compilation</h3>
-      <p>Submit jobs via CLI, SSH shell, or REST API. Workers pick up tasks from a shared NFS queue, compile with <code>icecc</code> or <code>make</code>, and report back.</p>
-    </div>
-    <div class="feature">
-      <div class="feature-icon">&#128274;</div>
-      <h3>Optional WireGuard tunneling</h3>
-      <p>Enable one flag in the config and cloud workers self-register: they generate a key pair, call the API, get assigned a tunnel IP, and come online &mdash; all in one command.</p>
-    </div>
-    <div class="feature">
-      <div class="feature-icon">&#128202;</div>
-      <h3>Live web dashboard</h3>
-      <p>Built-in dashboard shows workers, job queue, package queue, and WireGuard peers. Fully brandable &mdash; set your own name, logo URL, and accent color in the config.</p>
-    </div>
-    <div class="feature">
-      <div class="feature-icon">&#127760;</div>
-      <h3>Full REST API</h3>
-      <p>Every action has an API endpoint. Submit jobs, query workers, trigger gateway syncs, and manage WireGuard peers programmatically from any language.</p>
-    </div>
-    <div class="feature">
-      <div class="feature-icon">&#128187;</div>
-      <h3>SSH interactive shell</h3>
-      <p>Access a restricted shell over SSH for ops tasks &mdash; push packages, inspect queues, register WireGuard workers, and drop into the host OS shell when needed.</p>
-    </div>
-    <div class="feature">
-      <div class="feature-icon">&#128230;</div>
-      <h3>Zero dependencies</h3>
-      <p>Single Rust binary per component. No runtime, no Python, no npm. Ships as a zip with three tarballs and a Docker image. Install script gets you running in under 2 minutes.</p>
+    <div class="terminal">
+      <div class="terminal-bar">
+        <span class="dot dot-r"></span>
+        <span class="dot dot-y"></span>
+        <span class="dot dot-g"></span>
+        <span class="terminal-title">smech-farm-worker &mdash; cloud setup</span>
+      </div>
+      <div class="terminal-body">
+        <span class="t-line" id="tl0"><span class="t-prompt">root@gcp-vm</span><span class="t-cmd"> $ smech-farm-worker </span><span class="t-arg">wg-setup </span><span class="t-flag">--orchestrator </span><span class="t-arg">203.0.113.10:7734 </span><span class="t-flag">--name </span><span class="t-arg">worker-gcp-1</span></span>
+        <span class="t-line hidden" id="tl1"><br><span class="t-ok">[*]</span> <span class="t-cmd">SmechFarm WireGuard setup</span></span>
+        <span class="t-line hidden" id="tl2"><span class="t-ok">[*]</span> <span class="t-cmd">Orchestrator: 203.0.113.10:7734</span></span>
+        <span class="t-line hidden" id="tl3"><span class="t-ok">[+]</span> <span class="t-cmd">Generated WireGuard key pair</span></span>
+        <span class="t-line hidden" id="tl4"><span class="t-ok">[*]</span> <span class="t-cmd">Registering as <span class="t-arg">'worker-gcp-1'</span>...</span></span>
+        <span class="t-line hidden" id="tl5"><span class="t-ok">[+]</span> <span class="t-cmd">Assigned WireGuard IP: <span class="t-ip">10.99.0.2</span></span></span>
+        <span class="t-line hidden" id="tl6"><span class="t-ok">[+]</span> <span class="t-cmd">WireGuard interface smech-farm is up</span></span>
+        <span class="t-line hidden" id="tl7"><br><span class="t-sep">&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;</span></span>
+        <span class="t-line hidden" id="tl8"><span class="t-ok">[+]</span> <span class="t-cmd">WireGuard setup complete!</span></span>
+        <span class="t-line hidden" id="tl9">    <span class="t-info">Start daemon: </span><span class="t-cmd">smech-farm-worker daemon </span><span class="t-flag">--orchestrator </span><span class="t-ip">10.99.0.1</span><span class="t-cmd">:7734</span></span>
+        <span class="t-line hidden" id="tl10"><br><span class="t-prompt">root@gcp-vm</span><span class="t-cmd"> $ </span><span class="cursor"></span></span>
+      </div>
     </div>
   </div>
 </section>
 
-<section id="config">
-  <div class="config-section">
+<section id="features">
+  <div class="features-section">
+    <div class="section-header">
+      <h2>Everything you need in one binary</h2>
+      <p>Three components &mdash; orchestrator, worker, client &mdash; each a single Rust binary with no runtime dependencies.</p>
+    </div>
+    <div class="feature-grid">
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+            <rect x="3" y="3" width="7" height="7" rx="1.5" fill="#0a0a0a"/>
+            <rect x="12" y="3" width="7" height="7" rx="1.5" fill="#0a0a0a"/>
+            <rect x="3" y="12" width="7" height="7" rx="1.5" fill="#0a0a0a"/>
+            <rect x="12" y="12" width="7" height="7" rx="1.5" fill="#0a0a0a"/>
+          </svg>
+        </div>
+        <h3>Distributed compilation</h3>
+        <p>Submit jobs via CLI, SSH shell, or REST API. Workers pull tasks from the shared queue, compile with icecc or make, and report back.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+            <circle cx="11" cy="11" r="7" stroke="#0a0a0a" stroke-width="2"/>
+            <path d="M11 4v7l4 3" stroke="#0a0a0a" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <h3>Optional WireGuard tunneling</h3>
+        <p>Enable one flag and cloud workers self-register: they generate a key pair, call the API, get a tunnel IP, and come online in one command.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+            <rect x="2" y="5" width="18" height="13" rx="2" stroke="#0a0a0a" stroke-width="2"/>
+            <path d="M7 9h8M7 13h5" stroke="#0a0a0a" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <h3>Live web dashboard</h3>
+        <p>Built-in dashboard shows workers, job queue, and WireGuard peers. Fully brandable &mdash; set your name, logo, and accent color in the config.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+            <path d="M4 11h14M13 6l5 5-5 5" stroke="#0a0a0a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <h3>Full REST API</h3>
+        <p>Every action has an endpoint. Submit jobs, query workers, trigger syncs, and manage WireGuard peers programmatically from any language.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+            <rect x="3" y="3" width="16" height="16" rx="2" stroke="#0a0a0a" stroke-width="2"/>
+            <path d="M7 9l3 3-3 3M12 15h3" stroke="#0a0a0a" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <h3>SSH interactive shell</h3>
+        <p>Access a restricted shell over SSH for ops tasks &mdash; push packages, inspect queues, register workers, and drop to the host OS when needed.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+            <path d="M11 3l2.5 5h5.5l-4.5 3.5 1.5 5.5L11 14l-5 3 1.5-5.5L3 8h5.5L11 3z" stroke="#0a0a0a" stroke-width="1.5" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <h3>Zero dependencies</h3>
+        <p>Single Rust binary per component. No runtime, no Python, no npm. Ships as tarballs and a Docker image. Install script gets you running in under 2 minutes.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="config" class="config-section">
+  <div class="config-inner">
     <div>
       <div class="section-label">Configuration</div>
       <h2>WireGuard is off by default</h2>
       <p>
         Drop a <code>smech-farm.toml</code> next to the binary or at
         <code>/etc/smech-farm/smech-farm.toml</code>. Every field has a sane default &mdash;
-        a config file is optional for LAN-only setups.
+        the config file is optional for LAN-only setups.
       </p>
       <p>
         Set <code>wireguard.enabled = true</code> and point <code>server_endpoint</code>
@@ -423,10 +550,10 @@ footer .f-right { margin-left: auto; display: flex; gap: 20px; }
 <span class="c-section">[farm]</span>
 <span class="c-key">name</span>         <span class="c-eq">=</span> <span class="c-val">"My Build Farm"</span>
 <span class="c-key">tagline</span>      <span class="c-eq">=</span> <span class="c-val">"Distributed Build Farm"</span>
-<span class="c-key">accent_color</span> <span class="c-eq">=</span> <span class="c-val">"#3d9bff"</span>
+<span class="c-key">accent_color</span> <span class="c-eq">=</span> <span class="c-val">"#ff5a4e"</span>
 <span class="c-key">logo_url</span>     <span class="c-eq">=</span> <span class="c-val">""</span>  <span class="c-comment"># URL or base64 data URI</span>
 
-<span class="c-comment"># ── WireGuard (optional) ────────────────────</span>
+<span class="c-comment"># ── WireGuard (optional) ─────────────────────</span>
 <span class="c-section">[wireguard]</span>
 <span class="c-key">enabled</span>          <span class="c-eq">=</span> <span class="c-bool">false</span>   <span class="c-comment"># set true for cloud workers</span>
 <span class="c-key">server_endpoint</span>  <span class="c-eq">=</span> <span class="c-val">""</span>       <span class="c-comment"># "1.2.3.4:51820"</span>
@@ -437,65 +564,71 @@ footer .f-right { margin-left: auto; display: flex; gap: 20px; }
 </section>
 
 <section class="cloud-section">
-  <div class="section-label">Cloud compatibility</div>
-  <h2>Workers run anywhere</h2>
-  <p class="sub">Any Linux host reachable over the internet can join the farm via WireGuard.</p>
-  <div class="cloud-grid">
-    <div class="cloud-card"><span class="cc-icon">&#9729;</span><div><div class="cc-name">Google Cloud</div><div class="cc-note">Compute Engine</div></div></div>
-    <div class="cloud-card"><span class="cc-icon">&#9729;</span><div><div class="cc-name">AWS</div><div class="cc-note">EC2</div></div></div>
-    <div class="cloud-card"><span class="cc-icon">&#9729;</span><div><div class="cc-name">Azure</div><div class="cc-note">Virtual Machines</div></div></div>
-    <div class="cloud-card"><span class="cc-icon">&#9729;</span><div><div class="cc-name">Hetzner</div><div class="cc-note">Cloud Servers</div></div></div>
-    <div class="cloud-card"><span class="cc-icon">&#9729;</span><div><div class="cc-name">Contabo</div><div class="cc-note">VPS</div></div></div>
-    <div class="cloud-card"><span class="cc-icon">&#128421;</span><div><div class="cc-name">Bare metal</div><div class="cc-note">LAN / no WireGuard</div></div></div>
+  <div class="cloud-inner">
+    <div class="section-label">Cloud compatibility</div>
+    <h2>Workers run anywhere</h2>
+    <p class="sub">Any Linux host reachable over the internet can join the farm via WireGuard.</p>
+    <div class="cloud-grid">
+      <div class="cloud-card"><span class="cc-icon">&#9729;</span><div><div class="cc-name">Google Cloud</div><div class="cc-note">Compute Engine</div></div></div>
+      <div class="cloud-card"><span class="cc-icon">&#9729;</span><div><div class="cc-name">AWS</div><div class="cc-note">EC2</div></div></div>
+      <div class="cloud-card"><span class="cc-icon">&#9729;</span><div><div class="cc-name">Azure</div><div class="cc-note">Virtual Machines</div></div></div>
+      <div class="cloud-card"><span class="cc-icon">&#9729;</span><div><div class="cc-name">Hetzner</div><div class="cc-note">Cloud Servers</div></div></div>
+      <div class="cloud-card"><span class="cc-icon">&#9729;</span><div><div class="cc-name">Contabo</div><div class="cc-note">VPS</div></div></div>
+      <div class="cloud-card"><span class="cc-icon">&#128421;</span><div><div class="cc-name">Bare metal</div><div class="cc-note">LAN / no WireGuard</div></div></div>
+    </div>
   </div>
 </section>
 
 <section id="install" class="install-section">
-  <div class="section-label">Get started</div>
-  <h2>Up in under 2 minutes</h2>
-  <p class="sub">Build from source with Cargo or download a pre-built release.</p>
-  <div class="install-steps">
-    <div class="install-step">
-      <div class="step-header"><span class="step-num">1</span> Build</div>
-      <div class="step-body">
-        <pre class="step-code"><span class="sc-cmd">git clone</span> github.com/Smech-Labs/smech-farm
+  <div class="install-inner">
+    <div class="section-label">Get started</div>
+    <h2>Up in under 2 minutes</h2>
+    <p class="sub">Build from source with Cargo or grab a pre-built release from GitHub.</p>
+    <div class="install-steps">
+      <div class="install-step">
+        <div class="step-header"><span class="step-num">1</span> Build</div>
+        <div class="step-body">
+          <pre class="step-code"><span class="sc-cmd">git clone</span> github.com/Smech-Labs/smech-farm
 <span class="sc-cmd">cd</span> smech-farm
 <span class="sc-cmd">bash</span> build.sh</pre>
+        </div>
       </div>
-    </div>
-    <div class="install-step">
-      <div class="step-header"><span class="step-num">2</span> Deploy orchestrator</div>
-      <div class="step-body">
-        <pre class="step-code"><span class="sc-comment"># Extract + install</span>
+      <div class="install-step">
+        <div class="step-header"><span class="step-num">2</span> Deploy orchestrator</div>
+        <div class="step-body">
+          <pre class="step-code"><span class="sc-comment"># Extract and install</span>
 <span class="sc-cmd">tar xf</span> smech-farm-orchestrator-2.0.0.tar.gz
 <span class="sc-cmd">sudo bash</span> install.sh</pre>
+        </div>
       </div>
-    </div>
-    <div class="install-step">
-      <div class="step-header"><span class="step-num">3</span> Add workers (LAN)</div>
-      <div class="step-body">
-        <pre class="step-code"><span class="sc-cmd">tar xf</span> smech-farm-worker-2.0.0.tar.gz
+      <div class="install-step">
+        <div class="step-header"><span class="step-num">3</span> Add workers (LAN)</div>
+        <div class="step-body">
+          <pre class="step-code"><span class="sc-cmd">tar xf</span> smech-farm-worker-2.0.0.tar.gz
 <span class="sc-cmd">sudo bash</span> install.sh &lt;orchestrator&gt;:7734</pre>
+        </div>
       </div>
-    </div>
-    <div class="install-step">
-      <div class="step-header"><span class="step-num">4</span> Add workers (Cloud)</div>
-      <div class="step-body">
-        <pre class="step-code"><span class="sc-comment"># On the cloud VM (as root)</span>
+      <div class="install-step">
+        <div class="step-header"><span class="step-num">4</span> Add workers (Cloud)</div>
+        <div class="step-body">
+          <pre class="step-code"><span class="sc-comment"># On the cloud VM, as root</span>
 <span class="sc-cmd">smech-farm-worker wg-setup</span> \
   --orchestrator &lt;ip&gt;:7734 \
   --name worker-cloud-1</pre>
+        </div>
       </div>
     </div>
   </div>
 </section>
 
-<footer>
-  <span class="f-logo">[smech-farm]</span>
-  <span class="f-copy">&copy; 2025 SmechLabs. MIT License.</span>
-  <div class="f-right">
+<footer class="site-footer">
+  <img src="logo.svg" alt="SmechFarm" class="footer-logo">
+  <div class="footer-brand">SmechFarm</div>
+  <p>&copy; 2025 SmechLabs. MIT License.</p>
+  <div class="footer-links">
     <a href="https://github.com/Smech-Labs/smech-farm">GitHub</a>
-    <a href="https://smech.xyz">SmechLabs</a>
+    <a href="https://labs.smech.xyz">SmechLabs</a>
+    <a href="mailto:smechos@protonmail.com">Contact</a>
   </div>
 </footer>
 
@@ -509,6 +642,10 @@ function showNext() {
   if (i < lines.length) setTimeout(showNext, i === 1 ? 300 : i < 6 ? 550 : 250);
 }
 setTimeout(showNext, 900);
+
+document.getElementById('nav-toggle').addEventListener('click', () => {
+  document.getElementById('main-nav').classList.toggle('open');
+});
 </script>
 
 </body>
